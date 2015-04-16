@@ -1,0 +1,4 @@
+rootProject.name = 'alfa 2'
+
+include 'parserlib'
+
