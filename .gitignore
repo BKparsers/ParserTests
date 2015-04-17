@@ -66,9 +66,9 @@ hs_err_pid*
 ### retor template
 out
 .gradle
-gradle
+
 .idea
 build
-gradlew
-gradlew.bat
+#gradlew
+#gradlew.bat
 
