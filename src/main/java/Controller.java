@@ -1,6 +1,7 @@
 import contentclasses.CategoryTree;
 import contentclasses.Event;
 import contentclasses.SportTree;
+import future.xbet.TestHttp;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
@@ -25,11 +26,12 @@ public class Controller implements IListenerTest {
 
     @FXML
     public void initialize() {
-        TestWorker worker = new TestWorker();
+/*        TestWorker worker = new TestWorker();
 //        //MainWorker worker = new MainWorker();
         worker.registerListener(this);
         worker.updateData();
-        initTexts();
+        initTexts();*/
+        TestHttp th = new TestHttp();
         for (TextArea t:texts){
             t.setText(" Wait a minute, loading Events information");
         }
