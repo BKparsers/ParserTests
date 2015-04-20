@@ -1,23 +1,10 @@
 package loader;
 
-import contentclasses.SportTree;
-import interfaces.ILoader;
-import interfaces.IParser;
-import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import parser.MarathonParser;
-import rx.functions.Action1;
-
-import java.util.ArrayList;
-
 /**
  * Created by retor on 06.04.2015.
  */
 public class SimpleJsonLoaderTest {
-
-    ILoader loader;
+    /*ILoader loader;
     IParser parser;
 
     @Before
@@ -70,5 +57,5 @@ public class SimpleJsonLoaderTest {
     @Test
     public void testGetParserClassName() throws Exception {
         Assert.assertEquals(loader.getParserClassName(), parser.getClass().getName());
-    }
+    }*/
 }

@@ -1,15 +1,14 @@
-import contentclasses.CategoryTree;
-import contentclasses.Event;
 import contentclasses.SportTree;
-import future.xbet.TestHttp;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import tests.interfaceTest.IListenerTest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Controller implements IListenerTest {
 
@@ -22,54 +21,44 @@ public class Controller implements IListenerTest {
     @FXML
     javafx.scene.control.TextArea text3;
 
-    private ArrayList<TextArea> texts = new ArrayList<>();
+    private TextArea[] textAreas;
 
     @FXML
     public void initialize() {
-/*        TestWorker worker = new TestWorker();
+        textAreas = new TextArea[]{text, text1, text2, text3};
+        TestWorker worker = new TestWorker();
 //        //MainWorker worker = new MainWorker();
         worker.registerListener(this);
         worker.updateData();
-        initTexts();*/
-        TestHttp th = new TestHttp();
-        for (TextArea t:texts){
-            t.setText(" Wait a minute, loading Events information");
-        }
+        /*TestHttp th = new TestHttp();*/
+        Arrays.asList(textAreas).stream().parallel().forEach(textArea -> textArea.setText(" Wait a minute, loading Events information"));
     }
 
     @Override
     public void update(HashMap<String, ArrayList<SportTree>> results) {
-        int i = 0;
-        for (Map.Entry<String, ArrayList<SportTree>> entry : results.entrySet()) {
-            TextArea tmp = texts.get(i);
-            tmp.clear();
-            tmp.autosize();
-            tmp.setText(entry.getKey()+'\n');
-            fiilText(tmp, entry.getValue());
-            i++;
-        }
-    }
+        results.entrySet().stream().forEach(new Consumer<Map.Entry<String, ArrayList<SportTree>>>() {
+            volatile int i = 0;
 
-    private void fiilText(TextArea txt, ArrayList<SportTree> trees){
-        Platform.runLater(() -> {
-            for (SportTree tree : trees) {
-                txt.appendText(tree.getName() + '\n');
-                for (CategoryTree categoryTree : tree) {
-                    txt.appendText(categoryTree.getName() + '\n');
-                    for (Event event : categoryTree) {
-                        if (event != null && event.toString().length() > 0)
-                            txt.appendText(event.toString() + '\n');
-                    }
-                }
+            @Override
+            public void accept(Map.Entry<String, ArrayList<SportTree>> stringArrayListEntry) {
+                TextArea tmp = textAreas[i];
+                tmp.clear();
+                tmp.autosize();
+                tmp.setText(stringArrayListEntry.getKey() + '\n');
+                fiilText(tmp, stringArrayListEntry.getValue());
+                i++;
             }
-            txt.positionCaret(0);
         });
     }
 
-    private void initTexts(){
-        texts.add(text);
-        texts.add(text1);
-        texts.add(text2);
-        texts.add(text3);
+    private void fiilText(TextArea txt, ArrayList<SportTree> trees) {
+        trees.stream().parallel().forEach(sportTree -> Platform.runLater(() -> {
+            txt.appendText(sportTree.getName() + '\n');
+            sportTree.forEach(categoryTree -> {
+                txt.appendText(categoryTree.getName() + '\n');
+                categoryTree.forEach(event -> txt.appendText(event.toString() + '\n'));
+            });
+            txt.positionCaret(0);
+        }));
     }
 }

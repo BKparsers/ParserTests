@@ -1,16 +1,26 @@
+apply plugin: "idea"
 apply plugin: 'java'
+
 apply plugin: 'application'
+apply plugin: 'findbugs'
 mainClassName = "Main"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
 version = '1.0'
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 repositories {
+    jcenter()
     mavenCentral()
 }
 
+jar {
+    manifest.attributes("Main-Class": mainClassName);
+}
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+    gradleVersion = '1.22'
 }
 
 dependencies {

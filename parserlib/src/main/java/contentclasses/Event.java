@@ -7,9 +7,6 @@ import java.util.HashMap;
  * Created by Admin on 16.03.15.
  */
 public class Event {
-    private int categoryId;
-    private int eventid;
-    private long startTime;
     String eventName;
     String command1, command2;
     String eventStates;
@@ -23,6 +20,9 @@ public class Event {
     ArrayList<String> totals2command = new ArrayList<>();
     String href;
     HashMap<String, Integer> totals = new HashMap<>();
+    private int categoryId;
+    private int eventid;
+    private long startTime;
 
     public Event() {
 
@@ -45,8 +45,16 @@ public class Event {
         return command1;
     }
 
+    public void setCommand1(String command1) {
+        this.command1 = command1;
+    }
+
     public String getCommand2() {
         return command2;
+    }
+
+    public void setCommand2(String command2) {
+        this.command2 = command2;
     }
 
     public ArrayList<String> addForas1command() {
@@ -85,6 +93,10 @@ public class Event {
         return eventStates;
     }
 
+    public void setEventStates(String eventStates) {
+        this.eventStates = eventStates;
+    }
+
     public int getCategoryId() {
         return categoryId;
     }
@@ -97,32 +109,20 @@ public class Event {
         return eventid;
     }
 
-    public String getHref() {
-        return href;
-    }
-
-    public void setCommand1(String command1) {
-        this.command1 = command1;
-    }
-
-    public void setCommand2(String command2) {
-        this.command2 = command2;
-    }
-
-    public void setEventName(String eventEventName) {
-        this.eventName = eventEventName;
-    }
-
     public void setEventid(int eventid) {
         this.eventid = eventid;
     }
 
-    public void setEventStates(String eventStates) {
-        this.eventStates = eventStates;
+    public String getHref() {
+        return href;
     }
 
     public void setHref(String href) {
         this.href = href;
+    }
+
+    public void setEventName(String eventEventName) {
+        this.eventName = eventEventName;
     }
 
     public void setMaxbet(int maxbet) {

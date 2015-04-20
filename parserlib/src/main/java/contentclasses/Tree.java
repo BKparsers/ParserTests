@@ -2,6 +2,7 @@ package contentclasses;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 /**
  * Created by retor on 17.03.2015.
@@ -63,5 +64,10 @@ public class Tree<T, T1> implements Iterable<T> {
     @Override
     public Iterator<T> iterator() {
         return items.iterator();
+    }
+
+    @Override
+    public void forEach(Consumer<? super T> action) {
+        items.forEach(action);
     }
 }
