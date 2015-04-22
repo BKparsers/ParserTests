@@ -50,7 +50,7 @@ public class Test2Loader implements ITestLoader {
         });
     }
 
-    private JSONObject readResponse(String url) throws IOException, JSONException {
+    public JSONObject readResponse(String url) throws IOException, JSONException {
         Request r = Request.Get(url);
         r.socketTimeout(3500);
         r.connectTimeout(500);

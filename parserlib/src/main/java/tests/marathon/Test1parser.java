@@ -83,7 +83,7 @@ public class Test1parser implements ITestsParser<Element, Elements> {
         if (event.text().contains("removed")) {
             ev.setEventName("Event removed");
         } else {
-            ev.setEventid(Integer.valueOf(event.select("input").attr("id")));
+            ev.setEventid(Integer.parseInt(event.select("input").attr("id")));
             ev.setCommand1(event.select("div.live-today-member-name").first().text());
             ev.setCommand2(event.select("div.live-today-member-name").last().text());
             ev.setEventStates(event.select("body").select("div.cl-left").text() + event.select("body").select("div.green bold nobr").text());

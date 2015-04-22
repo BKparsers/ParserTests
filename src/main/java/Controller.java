@@ -52,7 +52,7 @@ public class Controller implements IListenerTest {
     }
 
     private void fiilText(TextArea txt, ArrayList<SportTree> trees) {
-        trees.stream().parallel().forEach(sportTree -> Platform.runLater(() -> {
+        trees.parallelStream().forEach(sportTree -> Platform.runLater(() -> {
             txt.appendText(sportTree.getName() + '\n');
             sportTree.forEach(categoryTree -> {
                 txt.appendText(categoryTree.getName() + '\n');
