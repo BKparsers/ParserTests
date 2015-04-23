@@ -48,13 +48,13 @@ public class XBetLoader implements ITestLoader {
         return Observable.create(new Observable.OnSubscribe<ArrayList<SportTree>>() {
             ArrayList<SportTree> sports = new ArrayList<>();
             ArrayList<CategoryTree> categoryes = new ArrayList<>();
-            ArrayList<Event> events = new ArrayList<>();
+            ArrayList<Event> events = new ArrayList<Event>();
             @Override
             public void call(Subscriber<? super ArrayList<SportTree>> subscriber) {
                 getJsonRoot().subscribe(object -> {
                     sports.addAll(getting(object, 0));
                     categoryes.addAll(getting(object, 1));
-                    loadEvents(parser.getEventUrls(new JSONObject().put("events", getting(object, 2)))).forEach(events::add);
+                    loadEvents(parser.getEventUrls(new JSONObject().put("events", (ArrayList<Event>)getting(object, 2)))).forEach(events::add);
                 });
                 subscriber.onNext(combineAll(sports, categoryes, events));
                 subscriber.onCompleted();
