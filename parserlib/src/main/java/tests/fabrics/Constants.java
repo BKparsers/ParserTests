@@ -9,7 +9,7 @@
  * *****************************************************
  */
 
-package tests;
+package tests.fabrics;
 
 /**
  * Created by retor on 28.04.2015.

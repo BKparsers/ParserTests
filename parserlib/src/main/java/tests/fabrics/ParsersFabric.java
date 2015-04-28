@@ -9,7 +9,7 @@
  * *****************************************************
  */
 
-package tests;
+package tests.fabrics;
 
 import tests.bkfonbet.Test2Parser;
 import tests.exceptions.ParserNotFoundException;

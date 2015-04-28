@@ -2,9 +2,9 @@ import contentclasses.SportTree;
 import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
-import tests.Constants;
-import tests.LoadersFabric;
-import tests.ParsersFabric;
+import tests.fabrics.Constants;
+import tests.fabrics.LoadersFabric;
+import tests.fabrics.ParsersFabric;
 import tests.exceptions.LoaderNotFoundException;
 import tests.exceptions.ParserNotFoundException;
 import tests.exceptions.WorkerException;
@@ -57,7 +57,6 @@ public class TestWorker implements IWorkerTest {
     @Override
     public void updateInformation(HashMap<String, ArrayList<SportTree>> results) {
         if (!results.isEmpty() && results.size() > 0) {
-            this.results.putAll(results);
             updateListeners();
         } else {
             updateData();
@@ -117,7 +116,9 @@ public class TestWorker implements IWorkerTest {
         createResult()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.immediate())
-                .subscribe(this::updateInformation, throwable -> showError(throwable).setVisible(true));
+                .subscribe(TestWorker.this.results::putAll,
+                        throwable -> showError(throwable).setVisible(true),
+                        () -> updateInformation(TestWorker.this.results));
     }
 
     private void updateListeners() {

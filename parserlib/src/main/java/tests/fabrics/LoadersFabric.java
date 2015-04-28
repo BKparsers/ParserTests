@@ -9,7 +9,7 @@
  * *****************************************************
  */
 
-package tests;
+package tests.fabrics;
 
 import tests.bkfonbet.Test2Loader;
 import tests.exceptions.LoaderNotFoundException;
