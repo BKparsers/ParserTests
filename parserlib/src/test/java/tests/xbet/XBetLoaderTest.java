@@ -18,7 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.util.ArrayList;
 
@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * Created by retor on 23.04.2015.
  */
 public class XBetLoaderTest {
-    ITestsParser parser = new ITestsParser() {
+    ITestParser parser = new ITestParser() {
         @Override
         public Object parseInput(JSONObject json) throws JSONException, NullPointerException {
             return null;
@@ -102,7 +102,7 @@ public class XBetLoaderTest {
 
     @Test
     public void testSetParser() throws Exception {
-        ITestsParser pt = new ITestsParser() {
+        ITestParser pt = new ITestParser() {
             @Override
             public Object parseInput(JSONObject json) throws JSONException, NullPointerException {
                 return null;

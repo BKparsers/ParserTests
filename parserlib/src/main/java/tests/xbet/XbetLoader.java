@@ -18,11 +18,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import rx.Observable;
 import rx.Subscriber;
+import tests.exceptions.LoadingException;
+import tests.exceptions.NullParserException;
+import tests.exceptions.ParsingException;
 import tests.interfaceTest.ITestLoader;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
-import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -30,31 +34,37 @@ import java.util.Objects;
  */
 public class XBetLoader implements ITestLoader {
 
-    private ITestsParser<JSONObject, JSONArray> parser;
+    private ITestParser<JSONObject, JSONArray> parser;
 
     private JSONObject miscNames;
 
-    public XBetLoader(ITestsParser<JSONObject, JSONArray> parser) {
+    public XBetLoader(ITestParser<JSONObject, JSONArray> parser) {
         this.parser = parser;
-        try {
-            this.miscNames = readResponse(""); //TODO: URL to misc manes JS + add current date in format ddmmyyyy
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
     public Observable<ArrayList<SportTree>> getData() {
+        //TODO: URL to misc manes JS + add current date in format ddmmyyyy
         return Observable.create(new Observable.OnSubscribe<ArrayList<SportTree>>() {
             ArrayList<SportTree> sports = new ArrayList<>();
             ArrayList<CategoryTree> categoryes = new ArrayList<>();
             ArrayList<Event> events = new ArrayList<Event>();
+
             @Override
             public void call(Subscriber<? super ArrayList<SportTree>> subscriber) {
+                try {
+                    miscNames = readResponse("https://xbetsport.com/js/betsNames_ru.js?f=" + (new SimpleDateFormat("ddMMyyyy").format(new Date())));
+                } catch (LoadingException e) {
+                    subscriber.onError(e);
+                }
                 getJsonRoot().subscribe(object -> {
-                    sports.addAll(getting(object, 0));
-                    categoryes.addAll(getting(object, 1));
-                    loadEvents(parser.getEventUrls(new JSONObject().put("events", (ArrayList<Event>)getting(object, 2)))).forEach(events::add);
+                    try {
+                        sports.addAll((ArrayList<SportTree>) getting(object, 0));
+                        categoryes.addAll((ArrayList<CategoryTree>) getting(object, 1));
+                        loadEvents(parser.getEventUrls(new JSONObject().put("events", (ArrayList<Event>) getting(object, 2)))).forEach(events::add);
+                    } catch (ParsingException | LoadingException e) {
+                        subscriber.onError(e);
+                    }
                 });
                 subscriber.onNext(combineAll(sports, categoryes, events));
                 subscriber.onCompleted();
@@ -74,7 +84,7 @@ public class XBetLoader implements ITestLoader {
         return sports;
     }
 
-    private void fillCategoryItems(ArrayList<CategoryTree> categoryTrees, ArrayList<Event> events){
+    private void fillCategoryItems(ArrayList<CategoryTree> categoryTrees, ArrayList<Event> events) {
         categoryTrees.parallelStream().forEach(categoryTree -> {
             int cId = categoryTree.getId();
             events.stream().filter(event -> event.getEventid() == cId).forEach(categoryTree::addItem);
@@ -89,13 +99,13 @@ public class XBetLoader implements ITestLoader {
             @Override
             public void call(Subscriber<? super JSONObject> subscriber) {
                 try {
-                    subscriber.onNext(parser.parseInput(Objects.requireNonNull(readResponse(parser.getBaseUrl()))));
-                } catch (IOException e) {
+                    subscriber.onNext(parser.parseInput(readResponse(parser.getBaseUrl())));
+                } catch (LoadingException | ParsingException e) {
                     subscriber.onError(e);
                 }
                 subscriber.onCompleted();
             }
-        }).retry(3).onErrorResumeNext(getJsonRoot());
+        });//.retry(3).onErrorResumeNext(getJsonRoot());
     }
 
     private Observable<Event> loadEvents(ArrayList<String> eventUrls) {
@@ -103,39 +113,51 @@ public class XBetLoader implements ITestLoader {
             Event out = null;
             try {
                 out = Objects.requireNonNull(parser.parseEvent(new JSONObject().put("event", readResponse(s)).put("miscs", miscNames)));
-            } catch (IOException e) {
+            } catch (LoadingException | ParsingException e) {
                 e.printStackTrace();
             }
             return out;
         });
     }
 
-    private ArrayList getting(JSONObject root, int param) {
+    private ArrayList getting(JSONObject root, int param) throws ParsingException, LoadingException {
         ArrayList out = null;
         JSONArray array;
         switch (param) {
             case 0:
                 array = parser.findSports(root);
                 out = new ArrayList<SportTree>();
-                for (int i = 0; i < array.length(); i++) {
-                    SportTree tmp = parser.parseSport(array.getJSONObject(i));
-                    out.add(tmp);
+                if (array != null && array.length() > 0) {
+                    for (int i = 0; i < array.length(); i++) {
+                        SportTree tmp = parser.parseSport(array.getJSONObject(i));
+                        out.add(tmp);
+                    }
+                } else {
+                    throw new LoadingException("Null array to parsing Sports");
                 }
                 break;
             case 1:
                 array = parser.findCategories(root);
                 out = new ArrayList<CategoryTree>();
-                for (int i = 0; i < array.length(); i++) {
-                    CategoryTree tmp = parser.parseCategory(array.getJSONObject(i));
-                    out.add(tmp);
+                if (array != null && array.length() > 0) {
+                    for (int i = 0; i < array.length(); i++) {
+                        CategoryTree tmp = parser.parseCategory(array.getJSONObject(i));
+                        out.add(tmp);
+                    }
+                } else {
+                    throw new LoadingException("Null array to parsing Caterories");
                 }
                 break;
             case 2:
                 array = parser.findEvents(root);
                 out = new ArrayList<Event>();
-                for (int i = 0; i < array.length(); i++) {
-                    int tmp = array.getJSONObject(i).optInt("id"); //TODO: valid key to ID
-                    out.add(tmp);
+                if (array != null && array.length() > 0) {
+                    for (int i = 0; i < array.length(); i++) {
+                        int tmp = array.getJSONObject(i).optInt("id"); //TODO: valid key to ID
+                        out.add(tmp);
+                    }
+                } else {
+                    throw new LoadingException("Null array to parsing Events");
                 }
                 break;
         }
@@ -144,16 +166,22 @@ public class XBetLoader implements ITestLoader {
 
     @Override
     public String getParserClassName() {
-        return parser.getClass().getName();
+        if (this.parser != null)
+            return parser.getClass().getName();
+        else
+            return "No parser found";
     }
 
     @Override
-    public ITestsParser getParser() {
-        return this.parser;
+    public ITestParser getParser() throws NullParserException {
+        if (this.parser != null)
+            return this.parser;
+        else
+            throw new NullParserException(getClass().getName() + " " + "This loader can't find parser. Please set parser for first");
     }
 
     @Override
-    public void setParser(ITestsParser parser) {
+    public void setParser(ITestParser parser) {
         this.parser = parser;
     }
 }

@@ -4,10 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import tests.interfaceTest.IListenerTest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class Controller implements IListenerTest {
@@ -30,14 +28,13 @@ public class Controller implements IListenerTest {
 //        //MainWorker worker = new MainWorker();
         worker.registerListener(this);
         worker.updateData();
-        /*TestHttp th = new TestHttp();*/
         Arrays.asList(textAreas).stream().parallel().forEach(textArea -> textArea.setText(" Wait a minute, loading Events information"));
     }
 
     @Override
     public void update(HashMap<String, ArrayList<SportTree>> results) {
         results.entrySet().stream().forEach(new Consumer<Map.Entry<String, ArrayList<SportTree>>>() {
-            volatile int i = 0;
+            int i = 0;
 
             @Override
             public void accept(Map.Entry<String, ArrayList<SportTree>> stringArrayListEntry) {
@@ -52,6 +49,7 @@ public class Controller implements IListenerTest {
     }
 
     private void fiilText(TextArea txt, ArrayList<SportTree> trees) {
+        txt.appendText(Calendar.getInstance().toInstant().atZone(ZoneId.systemDefault()).toString() + '\n');
         trees.parallelStream().forEach(sportTree -> Platform.runLater(() -> {
             txt.appendText(sportTree.getName() + '\n');
             sportTree.forEach(categoryTree -> {

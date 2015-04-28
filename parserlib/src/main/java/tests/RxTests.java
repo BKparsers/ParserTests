@@ -11,8 +11,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import rx.Observable;
 import rx.Subscriber;
+import tests.exceptions.ParsingException;
 import tests.interfaceTest.ITestLoader;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.io.*;
 import java.net.URL;
@@ -24,9 +25,9 @@ import java.util.ArrayList;
  */
 public class RxTests implements ITestLoader {
 
-    ITestsParser<Element, Elements> parser;
+    ITestParser<Element, Elements> parser;
 
-    public RxTests(ITestsParser parser) {
+    public RxTests(ITestParser parser) {
         this.parser = parser;
     }
 
@@ -51,12 +52,12 @@ public class RxTests implements ITestLoader {
     }
 
     @Override
-    public void setParser(ITestsParser parser) {
+    public void setParser(ITestParser parser) {
         this.parser = parser;
     }
 
     @Override
-    public ITestsParser getParser() {
+    public ITestParser getParser() {
         return this.parser;
     }
 
@@ -119,14 +120,18 @@ public class RxTests implements ITestLoader {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                for (Element sport : parser.findSports(root)) {
-                    SportTree tree = parser.parseSport(sport);
-                    for (Element category : parser.findCategories(sport)) {
-                        CategoryTree cat = parser.parseCategory(category);
-                        eventObservable(category).subscribe(cat::addItem);
-                        tree.addItem(cat);
+                try {
+                    for (Element sport : parser.findSports(root)) {
+                        SportTree tree = parser.parseSport(sport);
+                        for (Element category : parser.findCategories(sport)) {
+                            CategoryTree cat = parser.parseCategory(category);
+                            eventObservable(category).subscribe(cat::addItem);
+                            tree.addItem(cat);
+                        }
+                        subscriber.onNext(tree);
                     }
-                    subscriber.onNext(tree);
+                } catch (ParsingException e) {
+                    subscriber.onError(e);
                 }
                 subscriber.onCompleted();
             }
@@ -154,7 +159,7 @@ public class RxTests implements ITestLoader {
             request(s).subscribe(object -> {
                 try {
                     e[0] = parser.parseEvent(findEvent(object));
-                } catch (JSONException e1) {
+                } catch (JSONException | ParsingException e1) {
                     e1.printStackTrace();
                 }
             });

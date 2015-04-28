@@ -14,8 +14,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func1;
+import tests.exceptions.LoadingException;
+import tests.exceptions.ParsingException;
 import tests.interfaceTest.ITestLoader;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -26,37 +29,46 @@ import java.util.ArrayList;
  */
 public class Test1loader implements ITestLoader {
 
-    ITestsParser<Element, Elements> parser;
+    ITestParser<Element, Elements> parser;
 
-    public Test1loader(ITestsParser<Element, Elements> parser) {
+
+    public Test1loader(ITestParser<Element, Elements> parser) {
         this.parser = parser;
     }
 
     @Override
-    public Observable<ArrayList<SportTree>> getData() {
+    public Observable<ArrayList<SportTree>> getData(){
         ArrayList<SportTree> out = new ArrayList<>();
         return Observable.create(new Observable.OnSubscribe<ArrayList<SportTree>>() {
             @Override
             public void call(Subscriber<? super ArrayList<SportTree>> subscriber) {
-                Element root = null;
                 try {
-                    root = parser.parseInput(readResponse(parser.getBaseUrl()));
-                } catch (JSONException | IOException e) {
+                    Element root = parser.parseInput(readResponse(parser.getBaseUrl()));
+                    Observable.from(parser.findSports(root))
+                            .forEach(element -> {
+                                try {
+                                    SportTree tree = parser.parseSport(element);
+                                    Observable.from(parser.findCategories(element)).forEach(element1 -> {
+                                        try {
+                                            CategoryTree category = parser.parseCategory(element1);
+                                            getEventList(parser.getEventUrls(element1))
+                                                    .subscribe(category::addItem, subscriber::onError, () -> tree.addItem(category)).unsubscribe();
+                                        } catch (ParsingException | LoadingException e) {
+                                            subscriber.onError(e);
+                                        }
+                                    });
+                                    out.add(tree);
+                                } catch (ParsingException e) {
+                                    subscriber.onError(e);
+                                }
+                            }, subscriber::onError, () -> {
+                                subscriber.onNext(out);
+                                subscriber.onCompleted();
+                            });
+
+                } catch (ParsingException | LoadingException e) {
                     subscriber.onError(e);
                 }
-                Observable.from(parser.findSports(root))
-                        .forEach(element -> {
-                            SportTree tree = parser.parseSport(element);
-                            Observable.from(parser.findCategories(element)).forEach(element1 -> {
-                                CategoryTree category = parser.parseCategory(element1);
-                                getEventList(parser.getEventUrls(element1))
-                                        .subscribe(category::addItem, subscriber::onError, () -> tree.addItem(category)).unsubscribe();
-                            });
-                            out.add(tree);
-                        }, subscriber::onError, () -> {
-                            subscriber.onNext(out);
-                            subscriber.onCompleted();
-                        });
             }
         });
     }
@@ -67,16 +79,16 @@ public class Test1loader implements ITestLoader {
     }
 
     @Override
-    public ITestsParser getParser() {
+    public ITestParser getParser() {
         return this.parser;
     }
 
     @Override
-    public void setParser(ITestsParser parser) {
+    public void setParser(ITestParser parser) {
         this.parser = parser;
     }
 
-    public JSONObject readResponse(String url) throws IOException, JSONException {
+    public JSONObject readResponse(String url) throws LoadingException{
         Request r = Request.Get(url);
         r.socketTimeout(3500);
         r.connectTimeout(500);
@@ -88,10 +100,16 @@ public class Test1loader implements ITestLoader {
                 tmp = EntityUtils.toString(resp.getEntity(), Charset.forName("UTF-8"));
             if (respcode == 404 || respcode == 401)
                 readResponse(url);
+        } catch (IOException e) {
+            throw new LoadingException("Can't read response", e);
         } finally {
             r.abort();
         }
-        return new JSONObject(tmp);
+        if (tmp != null) {
+            return new JSONObject(tmp);
+        }else {
+            throw new LoadingException("Response is null. Check request param");
+        }
     }
 
     private Element findEvent(JSONObject object) throws JSONException {
@@ -113,19 +131,23 @@ public class Test1loader implements ITestLoader {
         return Jsoup.parse(html);
     }
 
-    private Observable<Event> getEventList(ArrayList<String> urls) {
-        return Observable.from(urls).map(s -> {
-            Event tmp = null;
-            try {
-                tmp = doEvent(s);
-            } catch (Exception e) {
+    private Observable<Event> getEventList(ArrayList<String> urls) throws LoadingException{
+        return Observable.from(urls).map(new Func1<String, Event>() {
+            Event event = null;
 
+            @Override
+            public Event call(String s) {
+                try {
+                    event = doEvent(s);
+                } catch (LoadingException | ParsingException e) {
+                    e.printStackTrace();
+                }
+                return event;
             }
-            return tmp;
         });
     }
 
-    private Event doEvent(String s) throws Exception {
+    private Event doEvent(String s) throws LoadingException, ParsingException {
         return parser.parseEvent(findEvent(readResponse(s)));
     }
 }

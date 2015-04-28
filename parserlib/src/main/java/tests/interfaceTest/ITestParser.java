@@ -3,8 +3,8 @@ package tests.interfaceTest;
 import contentclasses.CategoryTree;
 import contentclasses.Event;
 import contentclasses.SportTree;
-import org.json.JSONException;
 import org.json.JSONObject;
+import tests.exceptions.ParsingException;
 
 import java.util.ArrayList;
 
@@ -18,26 +18,24 @@ import java.util.ArrayList;
  *
  * This interface uing in loaders to parse loaded data;
  */
-public interface ITestsParser<T, T1> {
-
-
+public interface ITestParser<T, T1> {
     /**
      * This method is first in work.
      * Here we taking main Json request object and do main work or saving
      * */
-    T parseInput(JSONObject json) throws JSONException, NullPointerException;
+    T parseInput(JSONObject json) throws ParsingException;
 
-    T1 findSports(T root);
+    T1 findSports(T root) throws ParsingException;
 
-    T1 findCategories(T sport);
+    T1 findCategories(T sport) throws ParsingException;
 
-    T1 findEvents(T category);
+    T1 findEvents(T category) throws ParsingException;
 
-    SportTree parseSport(T response);
+    SportTree parseSport(T response) throws ParsingException;
 
-    CategoryTree parseCategory(T category);
+    CategoryTree parseCategory(T category) throws ParsingException;
 
-    Event parseEvent(T event);
+    Event parseEvent(T event) throws ParsingException;
 
     ArrayList<String> getEventUrls(T category);
 

@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.sql.Time;
 import java.time.Instant;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 /**
  * Created by retor on 06.04.2015.
  */
-public class Test1parser implements ITestsParser<Element, Elements> {
+public class Test1parser implements ITestParser<Element, Elements> {
     private String baseUrl = "https://liveupdate.marathonbookmakers.com/su/liveupdate/";
     private int count;
     private long updated;

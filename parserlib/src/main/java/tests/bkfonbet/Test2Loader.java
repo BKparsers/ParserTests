@@ -11,8 +11,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rx.Observable;
 import rx.Subscriber;
+import tests.exceptions.LoadingException;
+import tests.exceptions.ParsingException;
 import tests.interfaceTest.ITestLoader;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -22,10 +24,10 @@ import java.util.ArrayList;
  * Created by retor on 13.04.2015.
  */
 public class Test2Loader implements ITestLoader {
-    private ITestsParser<JSONObject, JSONArray> parser;
+    private ITestParser<JSONObject, JSONArray> parser;
     private JSONObject rootobject;
 
-    public Test2Loader(ITestsParser<JSONObject, JSONArray> parser) {
+    public Test2Loader(ITestParser<JSONObject, JSONArray> parser) {
         this.parser = parser;
     }
 
@@ -34,12 +36,13 @@ public class Test2Loader implements ITestLoader {
 
         return Observable.create(new Observable.OnSubscribe<ArrayList<SportTree>>() {
             ArrayList<SportTree> out = new ArrayList<>();
+
             @Override
             public void call(Subscriber<? super ArrayList<SportTree>> subscriber) {
                 rootobject = null;
                 try {
                     rootobject = readResponse(parser.getBaseUrl());
-                } catch (IOException | JSONException e) {
+                } catch (LoadingException e) {
                     subscriber.onError(e);
                 }
                 all(rootobject).subscribe(sportTrees -> out.addAll(sportTrees), subscriber::onError, () -> {
@@ -50,7 +53,7 @@ public class Test2Loader implements ITestLoader {
         });
     }
 
-    public JSONObject readResponse(String url) throws IOException, JSONException {
+    public JSONObject readResponse(String url) throws LoadingException {
         Request r = Request.Get(url);
         r.socketTimeout(3500);
         r.connectTimeout(500);
@@ -62,6 +65,8 @@ public class Test2Loader implements ITestLoader {
                 tmp = EntityUtils.toString(resp.getEntity(), Charset.forName("UTF-8"));
             if (respcode == 404 || respcode == 401)
                 readResponse(url);
+        } catch (IOException e) {
+            throw new LoadingException("Exception At loading", e);
         } finally {
             r.abort();
         }
@@ -74,13 +79,13 @@ public class Test2Loader implements ITestLoader {
     }
 
     @Override
-    public void setParser(ITestsParser parser) {
-        this.parser = parser;
+    public ITestParser getParser() {
+        return this.parser;
     }
 
     @Override
-    public ITestsParser getParser() {
-        return this.parser;
+    public void setParser(ITestParser parser) {
+        this.parser = parser;
     }
 
     private Observable<ArrayList<SportTree>> all(JSONObject root) {
@@ -88,13 +93,14 @@ public class Test2Loader implements ITestLoader {
             @Override
             public void call(Subscriber<? super ArrayList<SportTree>> subscriber) {
                 ArrayList<SportTree> out = new ArrayList<>();
-                JSONArray spors = parser.findSports(root);
-                JSONArray categories = parser.findCategories(root);
-                JSONArray events = parser.findEvents(root);
+                JSONArray spors = null;
                 try {
+                    spors = parser.findSports(root);
+                    JSONArray categories = parser.findCategories(root);
+                    JSONArray events = parser.findEvents(root);
                     out = createSports(spors);
                     fillMainArray(out, createCategories(categories), createEvents(events));
-                } catch (JSONException e) {
+                } catch (ParsingException e) {
                     subscriber.onError(e);
                 }
                 subscriber.onNext(out);
@@ -119,7 +125,7 @@ public class Test2Loader implements ITestLoader {
         }
     }
 
-    private ArrayList<SportTree> createSports(JSONArray array) throws JSONException {
+    private ArrayList<SportTree> createSports(JSONArray array) throws ParsingException {
         ArrayList<SportTree> out = new ArrayList<>();
         for (int i = 0; i < array.length(); i++) {
             out.add(parser.parseSport(array.getJSONObject(i)));
@@ -127,7 +133,7 @@ public class Test2Loader implements ITestLoader {
         return out;
     }
 
-    private ArrayList<CategoryTree> createCategories(JSONArray array) throws JSONException {
+    private ArrayList<CategoryTree> createCategories(JSONArray array) throws ParsingException {
         ArrayList<CategoryTree> out = new ArrayList<>();
         for (int i = 0; i < array.length(); i++) {
             out.add(parser.parseCategory(array.getJSONObject(i)));
@@ -135,7 +141,7 @@ public class Test2Loader implements ITestLoader {
         return out;
     }
 
-    private ArrayList<Event> createEvents(JSONArray events) throws JSONException {
+    private ArrayList<Event> createEvents(JSONArray events) throws ParsingException {
         ArrayList<Event> out = new ArrayList<>();
         ArrayList<JSONObject> l1 = new ArrayList<>();
         ArrayList<JSONObject> l2 = new ArrayList<>();
@@ -162,28 +168,6 @@ public class Test2Loader implements ITestLoader {
             }
             out.add(parser.parseEvent(parse));
         }
-/*
-        for (int i = 0; i < events.length(); i++) {
-            JSONObject tmp = events.getJSONObject(i);
-            JSONObject parse = new JSONObject();
-            if (tmp.optInt("parentId") != 0) {
-                parse.put("level2", tmp);
-                for (int k = 0; k < events.length(); k++) {
-                    if (events.getJSONObject(k).optInt("id") == tmp.getInt("parentId")) {
-                        parse.put("level1", events.getJSONObject(k));
-                        events.remove(k);
-                    }
-                }
-                events.remove(i);
-                tmpEvent = parser.parseEvent(parse);
-            } else {
-                parse.put("level1", tmp);
-                tmpEvent = parser.parseEvent(parse);
-            }
-            //parseMiscs(tmpEvent, findEventMiscs());
-            out.add(tmpEvent);
-        }
-*/
         return out;
     }
 

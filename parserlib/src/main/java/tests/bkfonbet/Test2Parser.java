@@ -6,14 +6,14 @@ import contentclasses.SportTree;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import tests.interfaceTest.ITestsParser;
+import tests.interfaceTest.ITestParser;
 
 import java.util.ArrayList;
 
 /**
  * Created by retor on 13.04.2015.
  */
-public class Test2Parser implements ITestsParser<JSONObject, JSONArray> {
+public class Test2Parser implements ITestParser<JSONObject, JSONArray> {
 
     private int count = 0;
     private String updTime, baseUrl = "https://live.bkfonbet.com/live/currentLine/ru/0";

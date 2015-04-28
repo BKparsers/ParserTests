@@ -1,17 +1,26 @@
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Error extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextArea textArea1;
+    private java.util.Timer timer = new Timer(true);
 
     public Error() {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
-
+        java.util.Timer timer = new Timer(true);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Error.this.dispose();
+            }
+        },5000);
 
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -61,5 +70,11 @@ public class Error extends JDialog {
 
     public void setTextArea1(String text){
         textArea1.setText(text);
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        timer.cancel();
     }
 }

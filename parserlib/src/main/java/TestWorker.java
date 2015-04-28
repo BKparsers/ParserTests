@@ -2,18 +2,18 @@ import contentclasses.SportTree;
 import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
-import tests.Combiner;
-import tests.bkfonbet.Test2Loader;
-import tests.bkfonbet.Test2Parser;
+import tests.Constants;
+import tests.LoadersFabric;
+import tests.ParsersFabric;
+import tests.exceptions.LoaderNotFoundException;
+import tests.exceptions.ParserNotFoundException;
+import tests.exceptions.WorkerException;
 import tests.interfaceTest.IListenerTest;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.IWorkerTest;
-import tests.marathon.Test1loader;
-import tests.marathon.Test1parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -56,10 +56,10 @@ public class TestWorker implements IWorkerTest {
 
     @Override
     public void updateInformation(HashMap<String, ArrayList<SportTree>> results) {
-        if (!results.isEmpty() && results.size() > 0){
+        if (!results.isEmpty() && results.size() > 0) {
             this.results.putAll(results);
             updateListeners();
-        }else {
+        } else {
             updateData();
         }
     }
@@ -77,7 +77,7 @@ public class TestWorker implements IWorkerTest {
     public void scheduleUpdates(int seconds) {
         if (seconds > 0) {
             this.updTimer = seconds;
-            this.executor.scheduleAtFixedRate(() -> updateData(), 0, updTimer, TimeUnit.SECONDS);
+            this.executor.scheduleAtFixedRate(this::updateData, 0, updTimer, TimeUnit.SECONDS);
         } else {
             executor.shutdownNow();
         }
@@ -100,9 +100,17 @@ public class TestWorker implements IWorkerTest {
         loaders.clear();
     }
 
-    private void fillLoaders() {
-        loaders.add(new Test1loader(new Test1parser()));
+    private void fillLoaders(){
+        try {
+            loaders.add(LoadersFabric.getLoader(Constants.MARATHON, ParsersFabric.getParser(Constants.MARATHON)));
+            loaders.add(LoadersFabric.getLoader(Constants.BKFONBET, ParsersFabric.getParser(Constants.BKFONBET)));
+            loaders.add(LoadersFabric.getLoader(Constants.XBET, ParsersFabric.getParser(Constants.XBET)));
+        } catch (LoaderNotFoundException | ParserNotFoundException e) {
+            showError(e);
+        }
+/*        loaders.add(new Test1loader(new Test1parser()));
         loaders.add(new Test2Loader(new Test2Parser()));
+        loaders.add(new XBetLoader(new XBetParser()));*/
     }
 
     private void doLoad() {
@@ -128,29 +136,36 @@ public class TestWorker implements IWorkerTest {
         out.setAlwaysOnTop(true);
         out.setLocation(300, 200);
         out.setTitle(throwable.getMessage());
-        out.setTextArea1(throwable.toString());
+        if (throwable.getCause() != null)
+            out.setTextArea1(throwable.toString() + " " + throwable.getCause().getMessage());
+        else
+            out.setTextArea1(throwable.toString());
         return out;
     }
 
-    private void combine(HashMap<String, ArrayList<SportTree>> results){
-        Combiner comb = new Combiner();
+    private void combine(HashMap<String, ArrayList<SportTree>> results) {
+/*        Combiner comb = new Combiner();
         comb.combineCategories();
         List<Observable<ArrayList<SportTree>>> observables = new ArrayList<>();
         for (ITestLoader load:loaders){
             observables.add(load.getData());
-        }
+        }*/
     }
 
-    private Observable<HashMap<String,ArrayList<SportTree>>> createResult() {
+    private Observable<HashMap<String, ArrayList<SportTree>>> createResult() {
+        HashMap<String, ArrayList<SportTree>> out = new HashMap<>();
         return Observable.create(new Observable.OnSubscribe<HashMap<String, ArrayList<SportTree>>>() {
             @Override
             public void call(Subscriber<? super HashMap<String, ArrayList<SportTree>>> subscriber) {
-                HashMap<String, ArrayList<SportTree>> out = new HashMap<>();
                 Observable.from(loaders)
                         .forEach(iTestLoader -> iTestLoader.getData()
-                                .subscribe(sportTrees -> out.put(iTestLoader.getParserClassName(), sportTrees), subscriber::onError));
+                                .subscribe(sportTrees -> out.put(iTestLoader.getParserClassName(), sportTrees), throwable ->
+                                        subscriber.onError(new WorkerException(iTestLoader.getClass().getName()).initCause(throwable))));
                 subscriber.onNext(out);
             }
+        }).onErrorReturn(throwable -> {
+            showError(throwable).setVisible(true);
+            return out;
         });
     }
 }
