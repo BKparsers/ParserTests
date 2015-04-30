@@ -9,12 +9,12 @@
  * *****************************************************
  */
 
-package tests.exceptions;
+package tests.exceptions.loaderEx;
 
 /**
  * Created by retor on 28.04.2015.
  */
-public class LoadingException extends Exception {
+public class LoadingException extends LoaderException {
     public LoadingException(Throwable cause) {
         super(cause);
     }

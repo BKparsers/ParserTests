@@ -2,24 +2,28 @@
  * ******************************************************
  *                  * Copyright (C) 2015 retor  <retor@mail.ru>
  *                  *
- *                  * This file ParsingException.java is part of  alfa 2.
+ *                  * This file ParserException.java is part of  alfa 2.
  *                  *
  *                  * alfa 2 / parserlib can not be copied and/or distributed without the express
  *                  * permission
  * *****************************************************
  */
 
-package tests.exceptions;
+package tests.exceptions.parserEx;
 
 /**
- * Created by retor on 28.04.2015.
+ * Created by retor on 29.04.2015.
  */
-public class ParsingException extends Exception {
-    public ParsingException(String message) {
+public class ParserException extends Exception {
+    public ParserException(Throwable cause) {
+        super(cause);
+    }
+
+    public ParserException(String message) {
         super(message);
     }
 
-    public ParsingException(String message, Throwable cause) {
+    public ParserException(String message, Throwable cause) {
         super(message, cause);
     }
 }

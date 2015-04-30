@@ -6,8 +6,8 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import rx.Observable;
-import tests.exceptions.LoadingException;
-import tests.exceptions.NullParserException;
+import tests.exceptions.loaderEx.LoadingException;
+import tests.exceptions.parserEx.ParserNotFoundException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -30,12 +30,12 @@ public interface ITestLoader {
      * @return String
      * name of parser or class what used in current loader
      * */
-    String getParserClassName();
+    String getParserClassName() throws ParserNotFoundException;
 
     /***
      * @return ITestsParser object what used in current loader
      * */
-    ITestParser getParser() throws NullParserException;
+    ITestParser getParser() throws ParserNotFoundException;
 
     /**
      * Set parser to work in current loader

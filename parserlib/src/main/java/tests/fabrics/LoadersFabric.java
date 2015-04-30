@@ -12,7 +12,7 @@
 package tests.fabrics;
 
 import tests.bkfonbet.Test2Loader;
-import tests.exceptions.LoaderNotFoundException;
+import tests.exceptions.loaderEx.LoaderNotFoundException;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.ITestParser;
 import tests.marathon.Test1loader;

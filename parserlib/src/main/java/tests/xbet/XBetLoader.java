@@ -18,9 +18,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import rx.Observable;
 import rx.Subscriber;
-import tests.exceptions.LoadingException;
-import tests.exceptions.NullParserException;
-import tests.exceptions.ParsingException;
+import tests.exceptions.loaderEx.LoadingException;
+import tests.exceptions.parserEx.ParserNotFoundException;
+import tests.exceptions.parserEx.ParsingException;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.ITestParser;
 
@@ -160,23 +160,23 @@ public class XBetLoader implements ITestLoader {
                 }
                 break;
         }
-        return Objects.requireNonNull(out);
+        return out;
     }
 
     @Override
-    public String getParserClassName() {
+    public String getParserClassName() throws ParserNotFoundException {
         if (this.parser != null)
             return parser.getClass().getName();
         else
-            return "No parser found";
+            throw new ParserNotFoundException("No parser found");
     }
 
     @Override
-    public ITestParser getParser() throws NullParserException {
+    public ITestParser getParser() throws ParserNotFoundException {
         if (this.parser != null)
             return this.parser;
         else
-            throw new NullParserException(getClass().getName() + " " + "This loader can't find parser. Please set parser for first");
+            throw new ParserNotFoundException(getClass().getName() + " " + "This loader can't find parser. Please set parser for first");
     }
 
     @Override

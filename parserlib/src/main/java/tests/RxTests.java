@@ -11,7 +11,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import rx.Observable;
 import rx.Subscriber;
-import tests.exceptions.ParsingException;
+import tests.exceptions.parserEx.ParsingException;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.ITestParser;
 

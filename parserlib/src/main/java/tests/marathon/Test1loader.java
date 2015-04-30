@@ -15,14 +15,16 @@ import org.jsoup.select.Elements;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
-import tests.exceptions.LoadingException;
-import tests.exceptions.ParsingException;
+import tests.exceptions.loaderEx.LoadingException;
+import tests.exceptions.parserEx.ParsingException;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.ITestParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by retor on 06.04.2015.
@@ -101,7 +103,7 @@ public class Test1loader implements ITestLoader {
             if (respcode == 404 || respcode == 401)
                 readResponse(url);
         } catch (IOException e) {
-            throw new LoadingException("Can't read response", e);
+            throw new LoadingException("Can't read response" + Calendar.getInstance().toInstant().atZone(ZoneId.systemDefault()).toString(), e);
         } finally {
             r.abort();
         }

@@ -12,7 +12,7 @@
 package tests.fabrics;
 
 import tests.bkfonbet.Test2Parser;
-import tests.exceptions.ParserNotFoundException;
+import tests.exceptions.parserEx.ParserNotFoundException;
 import tests.interfaceTest.ITestParser;
 import tests.marathon.Test1parser;
 import tests.xbet.XBetParser;

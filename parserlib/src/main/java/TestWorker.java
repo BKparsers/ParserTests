@@ -2,12 +2,12 @@ import contentclasses.SportTree;
 import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
+import tests.exceptions.WorkerException;
+import tests.exceptions.loaderEx.LoaderNotFoundException;
+import tests.exceptions.parserEx.ParserNotFoundException;
 import tests.fabrics.Constants;
 import tests.fabrics.LoadersFabric;
 import tests.fabrics.ParsersFabric;
-import tests.exceptions.LoaderNotFoundException;
-import tests.exceptions.ParserNotFoundException;
-import tests.exceptions.WorkerException;
 import tests.interfaceTest.IListenerTest;
 import tests.interfaceTest.ITestLoader;
 import tests.interfaceTest.IWorkerTest;
@@ -101,9 +101,9 @@ public class TestWorker implements IWorkerTest {
 
     private void fillLoaders(){
         try {
-            loaders.add(LoadersFabric.getLoader(Constants.MARATHON, ParsersFabric.getParser(Constants.MARATHON)));
-            loaders.add(LoadersFabric.getLoader(Constants.BKFONBET, ParsersFabric.getParser(Constants.BKFONBET)));
             loaders.add(LoadersFabric.getLoader(Constants.XBET, ParsersFabric.getParser(Constants.XBET)));
+//            loaders.add(LoadersFabric.getLoader(Constants.MARATHON, ParsersFabric.getParser(Constants.MARATHON)));
+//            loaders.add(LoadersFabric.getLoader(Constants.BKFONBET, ParsersFabric.getParser(Constants.BKFONBET)));
         } catch (LoaderNotFoundException | ParserNotFoundException e) {
             showError(e);
         }
@@ -158,11 +158,18 @@ public class TestWorker implements IWorkerTest {
         return Observable.create(new Observable.OnSubscribe<HashMap<String, ArrayList<SportTree>>>() {
             @Override
             public void call(Subscriber<? super HashMap<String, ArrayList<SportTree>>> subscriber) {
-                Observable.from(loaders)
-                        .forEach(iTestLoader -> iTestLoader.getData()
-                                .subscribe(sportTrees -> out.put(iTestLoader.getParserClassName(), sportTrees), throwable ->
-                                        subscriber.onError(new WorkerException(iTestLoader.getClass().getName()).initCause(throwable))));
-                subscriber.onNext(out);
+                        Observable.from(loaders)
+                                .forEach(iTestLoader -> iTestLoader.getData()
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(Schedulers.immediate())
+                                        .subscribe(sportTrees -> {
+                                                    try {
+                                                        out.put(iTestLoader.getParserClassName(), sportTrees);
+                                                    } catch (ParserNotFoundException e) {
+                                                        subscriber.onError(e);
+                                                    }
+                                                }, throwable -> subscriber.onError(new WorkerException(iTestLoader.getClass().getName()).initCause(throwable)),
+                                                () -> subscriber.onNext(out)));
             }
         }).onErrorReturn(throwable -> {
             showError(throwable).setVisible(true);

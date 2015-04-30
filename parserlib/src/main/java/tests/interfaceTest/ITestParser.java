@@ -4,7 +4,7 @@ import contentclasses.CategoryTree;
 import contentclasses.Event;
 import contentclasses.SportTree;
 import org.json.JSONObject;
-import tests.exceptions.ParsingException;
+import tests.exceptions.parserEx.ParsingException;
 
 import java.util.ArrayList;
 

@@ -9,12 +9,12 @@
  * *****************************************************
  */
 
-package tests.exceptions;
+package tests.exceptions.parserEx;
 
 /**
  * Created by retor on 28.04.2015.
  */
-public class ParserNotFoundException extends Exception {
+public class ParserNotFoundException extends ParserException {
     public ParserNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
